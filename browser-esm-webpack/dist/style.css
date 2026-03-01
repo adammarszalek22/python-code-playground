@@ -1,0 +1,18 @@
+#coding-space {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+#container {
+    width: 800px;
+    height: 600px;
+    border: 1px solid #ccc;
+}
+
+#terminal {
+    width: 800px;
+    height: 600px;
+    border: 1px solid #ccc;
+    resize: none;
+}
