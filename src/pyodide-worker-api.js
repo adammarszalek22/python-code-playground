@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const EXECUTION_TIME_LIMIT = 300000;
+// const EXECUTION_TIME_LIMIT = 300000;
+const EXECUTION_TIME_LIMIT = 3000;
 
 export default class PyodideWorkerApi {
 
@@ -277,7 +278,7 @@ class PyodideWorker {
 
         console.log('INTERRUPTING')
 
-        // 2 stands for SIGINT.
+        // 2 stands for SIGINT
         this.currentExecution.interruptBuffer[0] = 2;
 
         // AM 2026-03-16 - Assigning reject function to a separate variable because reset() sets it to null
@@ -292,7 +293,7 @@ class PyodideWorker {
 
     messageListener(event) {
 
-        // AM 2026-03-19 - If resolve function is undefined then it means the execution was interrupted and the reset() function has been called. So whatever then triggers this function shouldn't occur
+        // AM 2026-03-19 - Just in case we receive any messages from the worker after interrupting the execution (the interrupt does not happen instantaneously)
         if (!this.currentExecution.resolve) {
             console.warn(`Resolve is not defined`)
             return;

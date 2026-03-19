@@ -116,7 +116,7 @@ async function main(script, context) {
 
     } catch (error) {
 
-        console.error(error)
+        console.error(error);
 
     }
 
@@ -127,6 +127,21 @@ async function main(script, context) {
 
         job.interrupt();
         hideLoader();
+
+    }
+
+}
+
+for (const key of Object.keys(localStorage)) {
+
+    const regex = /code-snippet-(.+)/;
+
+    const match = regex.exec(key);
+
+    if (match) {
+
+        const name = match.at(1);
+        addToDatalist(name);
 
     }
 
@@ -143,9 +158,11 @@ function addToDatalist(name) {
 function removeFromDatalist(name) {
 
     for (const option of savedSnippetsDatalist.children) {
+
         if (option.value === name) {
             option.remove();
         }
+
     }
 
 }
