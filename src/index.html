@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python Playground</title>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+</head>
+
+<body>
+
+  <h1>Python Playground</h1>
+  <p>Enter Python code below and interact with the terminal.</p>
+
+  <div id="coding-space">
+
+    <div class="editor-wrapper">
+      <div class="editor-strip">
+        <button id="execute-code">Execute</button>
+        <button id="open-save-snippet-pop-up">Save</button>
+        <input list="saved-snippets" id="retrieve-snippet" placeholder="Retrieve...">
+        <input list="saved-snippets" id="remove-snippet" placeholder="Remove...">
+        <span class="loader" id="editor-loader"></span>
+      </div>
+      <div id="container"></div>
+    </div>
+
+    <div class="terminal-wrapper">
+      <div class="terminal-strip">
+        <button id="stop-terminal">Stop</button>
+      </div>
+      <textarea id="terminal"></textarea>
+    </div>
+
+    <div id="save-snippet-pop-up" class="overlay">
+    <div class="snippet-pop-up-box">
+        <h2>Save code snippet</h2>
+        <input type="text" id="code-snippet-name" placeholder="Enter snippet name" required />
+        <button id="save-snippet">Save</button>
+        <button id="close-save-snippet-pop-up">✕</button>
+    </div>
+    </div>
+
+    <datalist id="saved-snippets"></datalist>
+
+  </div>
+
+</body>
+
+</html>
