@@ -6,14 +6,15 @@ import './styles.css';
 
 // Code Editor
 const executeCodeButton = document.getElementById('execute-code');
-const openSaveSnippetButton = document.getElementById('open-save-snippet-pop-up');
+const openSaveSnippetButton = document.getElementById('open-save-snippet');
 const saveSnippetPopup = document.getElementById('save-snippet-pop-up');
 const codeSnippetName = document.getElementById('code-snippet-name');
-const closeSaveSnippetButton = document.getElementById("close-save-snippet-pop-up");
+const closeSaveSnippetButton = document.getElementById('close-save-snippet');
 const saveSnippetButton = document.getElementById('save-snippet');
-const retrieveInput = document.getElementById("retrieve-snippet");
-const removeInput = document.getElementById("remove-snippet");
-const savedSnippetsDatalist = document.getElementById("saved-snippets");
+const retrieveSnippetInput = document.getElementById('retrieve-snippet');
+const removeSnippetInput = document.getElementById('remove-snippet');
+const savedSnippetsDatalist = document.getElementById('saved-snippets');
+const loader = document.getElementById('loader');
 const monacoCodeEditor = document.getElementById('container');
 
 // Terminal
@@ -21,52 +22,63 @@ const stopTerminalButton = document.getElementById('stop-terminal');
 const terminal = document.getElementById('terminal');
 
 const pyodideWorkerApi = new PyodideWorkerApi({ stdoutFunction: addOutputToTerminal, stderrFunction: addOutputToTerminal });
-// const pyodideWorker = pyodideWorkerApi.createWorker();
+
+let job = null;
 
 const editorInstance = monaco.editor.create(monacoCodeEditor, {
     value: 'print("Hello world!")',
     language: 'python'
 });
 
-const savedSnippets = new Map(); // name -> code
+openSaveSnippetButton.addEventListener('click', () => saveSnippetPopup.classList.add('show'));
+closeSaveSnippetButton.addEventListener('click', () => saveSnippetPopup.classList.remove('show'));
 
-openSaveSnippetButton.addEventListener("click", () => saveSnippetPopup.classList.add("show"));
-closeSaveSnippetButton.addEventListener("click", () => saveSnippetPopup.classList.remove("show"));
+saveSnippetButton.addEventListener('click', function() {
 
-saveSnippetButton.addEventListener("click", () => {
+    const name = codeSnippetName.value;
 
-    const name = codeSnippetName.value.trim();
+    if (!name) {
+        return alert(`Please enter a snippet name`);
+    }
 
-    if (!name) return alert("Please enter a snippet name");
+    const key = `code-snippet-${name}`;
 
     const code = editorInstance.getValue();
-    savedSnippets.set(name, code);
-    updateDatalist();
 
-    codeSnippetName.value = "";
-    saveSnippetPopup.classList.remove("show");
+    localStorage.setItem(key, code);
+
+    addToDatalist(name);
+
+    codeSnippetName.value = '';
+    saveSnippetPopup.classList.remove('show');
 
 });
 
-retrieveInput.addEventListener("change", () => {
+retrieveSnippetInput.addEventListener('change', function() {
 
-    const name = retrieveInput.value;
+    const name = this.value;
 
-    if (savedSnippets.has(name)) {
-        editorInstance.setValue(savedSnippets.get(name));
+    const key = `code-snippet-${name}`;
+
+    const code = localStorage.getItem(key);
+
+    if (code) {
+        editorInstance.setValue(code);
     }
 
 });
 
-removeInput.addEventListener("change", () => {
+removeSnippetInput.addEventListener('change', function() {
 
-    const name = removeInput.value;
+    const name = this.value;
 
-    if (savedSnippets.has(name)) {
+    const key = `code-snippet-${name}`;
 
-        savedSnippets.delete(name);
-        updateDatalist();
-        removeInput.value = "";
+    if (key) {
+
+        localStorage.removeItem(key);
+        removeFromDatalist(name);
+        removeSnippetInput.value = '';
 
     }
 
@@ -78,33 +90,17 @@ executeCodeButton.addEventListener('click', async function() {
 
 });
 
-// saveSnippetButton.addEventListener('click', function () {
-
-//     const name = codeSnippetName.value;
-
-//     const code = editorInstance.getValue();
-
-//     localStorage.setItem(name, code);
-
-//     saveSnippetPopup.classList.remove('show');
-
-// });
-
 function addOutputToTerminal(string) {
-
     terminal.value += '>>>' + string + '\n';
-
 }
 
 function showLoader() {
-    document.getElementById("editor-loader").classList.add("show");
+    loader.classList.add('show');
 }
 
 function hideLoader() {
-    document.getElementById("editor-loader").classList.remove("show");
+    loader.classList.remove('show');
 }
-
-let job = null;
 
 async function main(script, context) {
 
@@ -136,16 +132,20 @@ async function main(script, context) {
 
 }
 
-function updateDatalist() {
+function addToDatalist(name) {
 
-    savedSnippetsDatalist.innerHTML = "";
+    const option = document.createElement('option');
+    option.value = name;
+    savedSnippetsDatalist.appendChild(option);
 
-    for (const name of savedSnippets.keys()) {
+}
 
-        const option = document.createElement("option");
-        option.value = name;
-        savedSnippetsDatalist.appendChild(option);
+function removeFromDatalist(name) {
 
+    for (const option of savedSnippetsDatalist.children) {
+        if (option.value === name) {
+            option.remove();
+        }
     }
 
 }

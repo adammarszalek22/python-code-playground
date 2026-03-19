@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const EXECUTION_TIME_LIMIT = 3000;
+const EXECUTION_TIME_LIMIT = 300000;
 
 export default class PyodideWorkerApi {
 
