@@ -23,6 +23,7 @@ There are also options to save, retrieve and delete code snippets but the user e
 - add `.env` and copy over the content from `.env.example`
 - when using for the first time, run `npm run build`
 - run `node server.js`
+- open `http://localhost:3000/` in your browser
 
 <a name="documentation-and-learning-materials"></a>
 ## Documentation and Learning Materials
