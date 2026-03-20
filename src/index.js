@@ -30,19 +30,6 @@ const editorInstance = monaco.editor.create(monacoCodeEditor, {
     language: 'python'
 });
 
-openSaveSnippetButton.addEventListener('click', showSaveSnippetPopup);
-closeSaveSnippetButton.addEventListener('click', hideShowSnippetPopup);
-
-saveSnippetButton.addEventListener('click', saveSnippet);
-retrieveSnippetInput.addEventListener('change', retrieveSnippet);
-removeSnippetInput.addEventListener('change', removeSnippet);
-
-executeCodeButton.addEventListener('click', async function() {
-
-    main(editorInstance.getValue(), {});
-
-});
-
 for (const key of Object.keys(localStorage)) {
 
     const regex = /code-snippet-(.+)/;
@@ -58,13 +45,26 @@ for (const key of Object.keys(localStorage)) {
 
 }
 
+executeCodeButton.addEventListener('click', async function() {
+
+    main(editorInstance.getValue(), {});
+
+});
+
+saveSnippetButton.addEventListener('click', saveSnippet);
+retrieveSnippetInput.addEventListener('change', retrieveSnippet);
+removeSnippetInput.addEventListener('change', removeSnippet);
+
+stopTerminalButton.addEventListener('click', stopExecution);
+
+openSaveSnippetButton.addEventListener('click', showSaveSnippetPopup);
+closeSaveSnippetButton.addEventListener('click', hideShowSnippetPopup);
+
 async function main(script, context) {
 
     showLoader();
 
     await new Promise(requestAnimationFrame);
-
-    stopTerminalButton.addEventListener('click', () => job.interrupt());
 
     try {
 
@@ -78,7 +78,6 @@ async function main(script, context) {
     } finally {
 
         hideLoader();
-        stopTerminalButton.removeEventListener('click', stopExecution);
 
     }
 
@@ -153,6 +152,10 @@ function removeSnippet() {
 
     }
 
+}
+
+function stopExecution() {
+    job?.interrupt();
 }
 
 function addOutputToTerminal(string) {
