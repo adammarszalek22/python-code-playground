@@ -27,9 +27,11 @@ There are also options to save, retrieve and delete code snippets but the user e
 <a name="documentation-and-learning-materials"></a>
 ## Documentation and Learning Materials
 
-Here I am listing the resources that I learnt from to be able to build this application.
+Here I am listing the resources that I used to be able to build this application.
 
 - https://codingchallenges.substack.com/p/coding-challenge-108-online-coding for step by step challenges
 - https://pyodide.org/ for executing Python code in the browser and making it communicate with JavaScript.
 - https://github.com/microsoft/monaco-editor (specifically https://github.com/microsoft/monaco-editor/tree/main/samples) to understand how to add the monaco editor to the website
-- https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API, https://github.com/mdn/dom-examples/tree/main/web-workers/simple-web-worker and https://pyodide.org/en/stable/usage/webworker.html for learning about web workers
+- https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API, https://github.com/mdn/dom-examples/tree/main/web-workers/simple-web-worker and https://pyodide.org/en/stable/usage/webworker.html for learning about web workers,
+- https://webpack.js.org/configuration for webpack configuraton
+- https://github.com/webpack/webpack-dev-middleware and https://github.com/webpack/webpack-hot-middleware for creating a development server with a hot reload
