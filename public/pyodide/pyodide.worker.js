@@ -12,6 +12,13 @@ self.onmessage = async (event) => {
 
     const pyodide = await pyodideReadyPromise;
 
+    if (command === 'initialise') {
+
+        self.postMessage({ initialised: true, id });
+        return;
+
+    }
+
     if (command === "setInterruptBuffer") {
 
         pyodide.setInterruptBuffer(interruptBuffer);
@@ -28,8 +35,6 @@ self.onmessage = async (event) => {
             new StdinHandler(['some string', 'some other input', 'some other longer input'], { isatty: true }),
         );
 
-        // pyodide.setStdout({ batched: (string) => self.postMessage({ stdout: string, id }) });
-        // pyodide.setStderr({ batched: (string) => self.postMessage({ stderr: string, id }) });
         pyodide.setStdout({ batched: (string) => self.postMessage({ stdout: string, id }) });
         pyodide.setStderr({ batched: (string) => self.postMessage({ stderr: string, id }) });
 
@@ -41,7 +46,6 @@ self.onmessage = async (event) => {
         try {
 
             const result = await pyodide.runPythonAsync(python, { globals });
-
             self.postMessage({ result, id });
 
         } catch (error) {

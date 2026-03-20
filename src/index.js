@@ -30,107 +30,18 @@ const editorInstance = monaco.editor.create(monacoCodeEditor, {
     language: 'python'
 });
 
-openSaveSnippetButton.addEventListener('click', () => saveSnippetPopup.classList.add('show'));
-closeSaveSnippetButton.addEventListener('click', () => saveSnippetPopup.classList.remove('show'));
+openSaveSnippetButton.addEventListener('click', showSaveSnippetPopup);
+closeSaveSnippetButton.addEventListener('click', hideShowSnippetPopup);
 
-saveSnippetButton.addEventListener('click', function() {
-
-    const name = codeSnippetName.value;
-
-    if (!name) {
-        return alert(`Please enter a snippet name`);
-    }
-
-    const key = `code-snippet-${name}`;
-
-    const code = editorInstance.getValue();
-
-    localStorage.setItem(key, code);
-
-    addToDatalist(name);
-
-    codeSnippetName.value = '';
-    saveSnippetPopup.classList.remove('show');
-
-});
-
-retrieveSnippetInput.addEventListener('change', function() {
-
-    const name = this.value;
-
-    const key = `code-snippet-${name}`;
-
-    const code = localStorage.getItem(key);
-
-    if (code) {
-        editorInstance.setValue(code);
-    }
-
-});
-
-removeSnippetInput.addEventListener('change', function() {
-
-    const name = this.value;
-
-    const key = `code-snippet-${name}`;
-
-    if (key) {
-
-        localStorage.removeItem(key);
-        removeFromDatalist(name);
-        removeSnippetInput.value = '';
-
-    }
-
-});
+saveSnippetButton.addEventListener('click', saveSnippet);
+retrieveSnippetInput.addEventListener('change', retrieveSnippet);
+removeSnippetInput.addEventListener('change', removeSnippet);
 
 executeCodeButton.addEventListener('click', async function() {
 
     main(editorInstance.getValue(), {});
 
 });
-
-function addOutputToTerminal(string) {
-    terminal.value += '>>>' + string + '\n';
-}
-
-function showLoader() {
-    loader.classList.add('show');
-}
-
-function hideLoader() {
-    loader.classList.remove('show');
-}
-
-async function main(script, context) {
-
-    showLoader();
-
-    stopTerminalButton.addEventListener('click', stopExecution);
-
-    try {
-
-        // await pyodideWorker.executePython(script, context);
-        job = pyodideWorkerApi.executePython(script, context);
-        await job.getResult();
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
-
-    hideLoader();
-    stopTerminalButton.removeEventListener('click', stopExecution);
-
-    function stopExecution() {
-
-        job.interrupt();
-        hideLoader();
-
-    }
-
-}
 
 for (const key of Object.keys(localStorage)) {
 
@@ -142,6 +53,32 @@ for (const key of Object.keys(localStorage)) {
 
         const name = match.at(1);
         addToDatalist(name);
+
+    }
+
+}
+
+async function main(script, context) {
+
+    showLoader();
+
+    await new Promise(requestAnimationFrame);
+
+    stopTerminalButton.addEventListener('click', () => job.interrupt());
+
+    try {
+
+        job = await pyodideWorkerApi.executePython(script, context);
+        await job.getResult();
+
+    } catch (error) {
+
+        console.log(error);
+
+    } finally {
+
+        hideLoader();
+        stopTerminalButton.removeEventListener('click', stopExecution);
 
     }
 
@@ -165,4 +102,75 @@ function removeFromDatalist(name) {
 
     }
 
+}
+
+function saveSnippet() {
+
+    const name = codeSnippetName.value;
+
+    if (!name) {
+        return alert(`Please enter a snippet name`);
+    }
+
+    const key = `code-snippet-${name}`;
+
+    const code = editorInstance.getValue();
+
+    localStorage.setItem(key, code);
+
+    addToDatalist(name);
+
+    codeSnippetName.value = '';
+    saveSnippetPopup.classList.remove('show');
+
+}
+
+function retrieveSnippet() {
+
+    const name = this.value;
+
+    const key = `code-snippet-${name}`;
+
+    const code = localStorage.getItem(key);
+
+    if (code) {
+        editorInstance.setValue(code);
+    }
+
+}
+
+function removeSnippet() {
+
+    const name = this.value;
+
+    const key = `code-snippet-${name}`;
+
+    if (key) {
+
+        localStorage.removeItem(key);
+        removeFromDatalist(name);
+        removeSnippetInput.value = '';
+
+    }
+
+}
+
+function addOutputToTerminal(string) {
+    terminal.value += '>>>' + string + '\n';
+}
+
+function showLoader() {
+    loader.classList.add('show');
+}
+
+function hideLoader() {
+    loader.classList.remove('show');
+}
+
+function showSaveSnippetPopup() {
+    saveSnippetPopup.classList.add('show');
+}
+
+function hideShowSnippetPopup() {
+    saveSnippetPopup.classList.remove('show')
 }

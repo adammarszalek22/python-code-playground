@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-// const EXECUTION_TIME_LIMIT = 300000;
-const EXECUTION_TIME_LIMIT = 3000;
+const EXECUTION_TIME_LIMIT = 300000;
 
 export default class PyodideWorkerApi {
 
@@ -18,7 +17,6 @@ export default class PyodideWorkerApi {
 
         for (let i = 0; i < this.minWorkers; i++) {
 
-            console.log(`Creating worker ${i}`);
             this.createWorker();
 
         }
@@ -26,8 +24,6 @@ export default class PyodideWorkerApi {
     }
 
     createWorker() {
-
-        console.log('Creating a worker');
 
         const worker = new PyodideWorker(this.workerOptions);
 
@@ -39,23 +35,18 @@ export default class PyodideWorkerApi {
 
     getAvailableWorker() {
 
-        console.log('Getting an available worker');
-
         for (const worker of this.workers) {
 
             if (worker.isAvailable) {
-                console.log('Found an available worker');
                 return worker;
             }
 
         }
 
         if (this.workers.length < this.maxWorkers) {
-            console.log('All workers are busy. Creating a new worker.');
             return this.createWorker();
         }
 
-        console.log('Max workers have been created. No workers available');
         return null;
 
     }
@@ -64,19 +55,17 @@ export default class PyodideWorkerApi {
 
         const id = uuidv4();
 
-        console.log(`Creating a job ${id}`)
-
-        const { promise, resolve, reject } = getPromiseResolveReject();
+        const { promise: initialisationPromise, resolve: initialisationResolve } = getPromiseResolveReject();
+        const { promise: executionPromise, resolve: executionResolve, reject: executionReject } = getPromiseResolveReject();
 
         const job = {
             script,
             context,
             worker: null,
-            promise,
-            resolve,
-            reject,
             timeoutFunctionId: null,
-            execute: function () {
+            execute: async function () {
+
+                await this.worker.initialise(initialisationPromise, initialisationResolve, executionPromise, executionResolve, executionReject);
 
                 this.timeoutFunctionId = setTimeout(() => {
 
@@ -88,7 +77,7 @@ export default class PyodideWorkerApi {
 
                 }, EXECUTION_TIME_LIMIT);
 
-                return this.worker.executePython(this.script, this.context, this.promise, this.resolve, this.reject);
+                return this.worker.executePython(this.script, this.context);
 
 
             },
@@ -99,7 +88,7 @@ export default class PyodideWorkerApi {
             },
             getResult: function () {
 
-                return this.promise;
+                return this.worker.currentExecution.promise;
 
             }
         };
@@ -112,15 +101,11 @@ export default class PyodideWorkerApi {
 
     addJobToQueue(jobId) {
 
-        console.log(`Adding a job ${jobId} to queue`);
-
         this.queue.push(jobId);
 
     }
 
     allocateWorkerToJob(jobId, worker) {
-
-        console.log(`Allocating a worker to job ${jobId}`);
 
         const job = this.getJob(jobId);
         job.worker = worker;
@@ -130,8 +115,6 @@ export default class PyodideWorkerApi {
     }
 
     releaseWorkerFromJob(jobId, worker) {
-
-        console.log(`Releasing a worker from job ${jobId}`);
 
         const job = this.getJob(jobId);
         job.worker = null;
@@ -148,16 +131,12 @@ export default class PyodideWorkerApi {
     removeJob(jobId) {
 
         this.queue = this.queue.filter((id) => id !== jobId);
-        console.log(`Removed job ${jobId} from the queue`);
 
         delete this.jobs[jobId];
-        console.log(`Deleted job ${jobId}`);
 
     }
 
-    executePython(script, context, options = {}) {
-
-        console.log(`Executing Python code`)
+    async executePython(script, context, options = {}) {
 
         const worker = this.getAvailableWorker();
 
@@ -212,14 +191,15 @@ class PyodideWorker {
         this.isAvailable = true;
         this.instance = new Worker('/pyodide/pyodide.worker.js');
 
-        this.boundListener = this.messageListener.bind(this);
-        this.instance.addEventListener('message', this.boundListener);
+        this.instance.addEventListener('message', this.messageListener.bind(this));
 
         this.stdoutFunction = options.stdoutFunction;
         this.stderrFunction = options.stderrFunction;
         this.stdinFunction = options.stdinFunction;
 
         this.currentExecution = {
+            initialisationPromise: null,
+            initialisationResolve: null,
             promise: null,
             resolve: null,
             reject: null,
@@ -230,6 +210,8 @@ class PyodideWorker {
 
     reset() {
 
+        this.currentExecution.initialisationPromise = null;
+        this.currentExecution.initialisationResolve = null;
         this.currentExecution.promise = null;
         this.currentExecution.resolve = null;
         this.currentExecution.reject = null;
@@ -250,33 +232,37 @@ class PyodideWorker {
 
     }
 
+    async initialise(initialisationPromise, initialisationResolve, executionPromise, executionResolve, executionReject) {
+
+        this.currentExecution.initialisationPromise = initialisationPromise;
+        this.currentExecution.initialisationResolve = initialisationResolve;
+        this.currentExecution.promise = executionPromise;
+        this.currentExecution.resolve = executionResolve;
+        this.currentExecution.reject = executionReject;
+        this.currentExecution.interruptBuffer[0] = 0;
+
+        this.instance.postMessage({ command: 'initialise', executionId: this.executionId });
+
+        return this.currentExecution.initialisationPromise;
+
+    }
+
     setExecutionId(executionId) {
 
         this.executionId = executionId;
 
     }
 
-    executePython(script, context, promise, resolve, reject) {
-
-        if (this.currentExecution.promise !== null) {
-            throw new Error(`Cannot call the "executePython" function second time if the first execution is still in progress`);
-        }
-
-        this.currentExecution.promise = promise;
-        this.currentExecution.resolve = resolve;
-        this.currentExecution.reject = reject;
-        this.currentExecution.interruptBuffer[0] = 0;
+    executePython(script, context) {
 
         this.instance.postMessage({ command: 'setInterruptBuffer', interruptBuffer: this.currentExecution.interruptBuffer, executionId: this.executionId });
         this.instance.postMessage({ command: 'runCode', context, python: script, executionId: this.executionId });
 
-        return promise;
+        return this.currentExecution.promise;
 
     }
 
     interruptPythonExecution(message) {
-
-        console.log('INTERRUPTING')
 
         // 2 stands for SIGINT
         this.currentExecution.interruptBuffer[0] = 2;
@@ -294,14 +280,19 @@ class PyodideWorker {
     messageListener(event) {
 
         // AM 2026-03-19 - Just in case we receive any messages from the worker after interrupting the execution (the interrupt does not happen instantaneously)
-        if (!this.currentExecution.resolve) {
-            console.warn(`Resolve is not defined`)
+        if (!this.currentExecution.promise) {
             return;
         }
 
         if (this.executionId !== event.data.id) {
-            console.warn(`Received a message from pyodide worker for the wrong executionId`);
             return;
+        }
+
+        if (event.data.initialised) {
+            
+            this.currentExecution.initialisationResolve();
+            return;
+
         }
 
         if (event.data.stdout) {
