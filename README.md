@@ -21,7 +21,6 @@ There are also options to save, retrieve and delete code snippets but the user e
 - make sure you have Node v22.22.1 or higher
 - run `npm install`
 - add `.env` and copy over the content from `.env.example`
-- when using for the first time, run `npm run build`
 - run `node server.js`
 - open `http://localhost:3000/` in your browser
 
