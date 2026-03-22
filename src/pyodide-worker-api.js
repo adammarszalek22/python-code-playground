@@ -189,8 +189,8 @@ class PyodideWorker {
 
         this.executionId = null;
         this.isAvailable = true;
-        this.instance = new Worker('/pyodide/pyodide.worker.js');
 
+        this.instance = new Worker(new URL("pyodide.worker.js", import.meta.url));
         this.instance.addEventListener('message', this.messageListener.bind(this));
 
         this.stdoutFunction = options.stdoutFunction;

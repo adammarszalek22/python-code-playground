@@ -3,7 +3,6 @@ import { fileURLToPath } from "url";
 
 import webpack from 'webpack';
 import HtmlWebpackPlugin from "html-webpack-plugin";
-import CopyPlugin from "copy-webpack-plugin";
 import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,10 +26,6 @@ export default {
 				test: /\.css$/,
 				use: ['style-loader', 'css-loader']
 			},
-			// {
-			// 	test: /\.ttf$/,
-			// 	use: ['file-loader']
-			// },
 			{
 				test: /\.(woff|woff2|eot|ttf|otf|svg)$/,
 				type: "asset/resource",
@@ -44,12 +39,12 @@ export default {
 		new HtmlWebpackPlugin({
 			template: './src/index.html'
 		}),
-		new CopyPlugin({
-			patterns: [
-				// { from: './src/styles.css', to: 'styles.css' },
-				{ from: './public', to: "" }
-			]
-		}),
+		// new CopyPlugin({
+		// 	patterns: [
+		// 		// { from: './src/styles.css', to: 'styles.css' },
+		// 		// { from: './public', to: "" }
+		// 	]
+		// }),
 		new webpack.HotModuleReplacementPlugin()
 	]
 };
