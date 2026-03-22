@@ -3,7 +3,7 @@ import globals from 'globals';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-    globalIgnores(['dist/', 'public/', '!public/pyodide.worker.js']),
+    globalIgnores(['dist/']),
     {
         files: ['**/*.{js,mjs,cjs}'],
         plugins: { js },
